@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Basic Solitaire</title>
+  <style>
+    body { background: green; margin: 0; padding: 20px; font-family: sans-serif; }
+    .card {
+      width: 80px;
+      height: 120px;
+      border-radius: 8px;
+      background-color: white;
+      border: 2px solid #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      cursor: grab;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <script>
+    const suits = ['♠', '♥', '♦', '♣'];
+    const values = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+    const container = document.getElementById('game-container');
+
+    function shuffleDeck() {
+      const deck = [];
+      for (let suit of suits) {
+        for (let value of values) {
+          deck.push(`${value}${suit}`);
+        }
+      }
+      return deck.sort(() => 0.5 - Math.random());
+    }
+
+    const deck = shuffleDeck();
+    let z = 1;
+
+    deck.slice(0, 28).forEach((card, i) => {
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.textContent = card;
+      el.style.left = `${20 + (i % 7) * 100}px`;
+      el.style.top = `${Math.floor(i / 7) * 30}px`;
+      el.draggable = true;
+
+      el.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', '');
+        el.style.zIndex = ++z;
+      });
+
+      el.addEventListener('dragend', e => {
+        el.style.left = `${e.pageX - 40}px`;
+        el.style.top = `${e.pageY - 60}px`;
+      });
+
+      container.appendChild(el);
+    });
+  </script>
+</body>
+</html>
