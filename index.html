@@ -1,32 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Basic Solitaire</title>
   <style>
-    body { background: green; margin: 0; padding: 20px; font-family: sans-serif; }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0a5c2d;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px;
+      font-size: 1.2rem;
+      background-color: #064d25;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    #instructions {
+      margin-bottom: 10px;
+    }
+
+    #reset-btn {
+      margin-top: 10px;
+      background-color: #ffffff;
+      color: #0a5c2d;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    #reset-btn:hover {
+      background-color: #e0e0e0;
+    }
+
+    #game-container {
+      position: relative;
+      height: calc(100vh - 100px);
+      overflow: hidden;
+    }
+
     .card {
       width: 80px;
       height: 120px;
-      border-radius: 8px;
       background-color: white;
       border: 2px solid #000;
+      border-radius: 10px;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
       position: absolute;
       cursor: grab;
       user-select: none;
+      transition: box-shadow 0.2s;
+    }
+
+    .card:active {
+      cursor: grabbing;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    .card.dragging {
+      transition: none;
     }
   </style>
 </head>
 <body>
+
+  <header>
+    <div id="instructions">
+      Drag and arrange the cards. Try to organize them by suit and order. Click "Shuffle" to restart.
+    </div>
+    <button id="reset-btn">🔄 Shuffle</button>
+  </header>
+
   <div id="game-container"></div>
 
   <script>
     const suits = ['♠', '♥', '♦', '♣'];
-    const values = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+    const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     const container = document.getElementById('game-container');
+    const resetButton = document.getElementById('reset-btn');
+
+    let z = 1;
 
     function shuffleDeck() {
       const deck = [];
@@ -38,29 +102,59 @@
       return deck.sort(() => 0.5 - Math.random());
     }
 
-    const deck = shuffleDeck();
-    let z = 1;
+    function createCard(cardText, x, y) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.textContent = cardText;
+      card.style.left = `${x}px`;
+      card.style.top = `${y}px`;
+      card.draggable = false;
 
-    deck.slice(0, 28).forEach((card, i) => {
-      const el = document.createElement('div');
-      el.className = 'card';
-      el.textContent = card;
-      el.style.left = `${20 + (i % 7) * 100}px`;
-      el.style.top = `${Math.floor(i / 7) * 30}px`;
-      el.draggable = true;
+      let offsetX, offsetY;
 
-      el.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', '');
-        el.style.zIndex = ++z;
+      card.addEventListener('mousedown', e => {
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+        card.classList.add('dragging');
+        card.style.zIndex = ++z;
+
+        function moveAt(pageX, pageY) {
+          card.style.left = `${pageX - offsetX}px`;
+          card.style.top = `${pageY - offsetY}px`;
+        }
+
+        function onMouseMove(e) {
+          moveAt(e.pageX, e.pageY);
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+
+        document.addEventListener('mouseup', function onMouseUp() {
+          card.classList.remove('dragging');
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        });
       });
 
-      el.addEventListener('dragend', e => {
-        el.style.left = `${e.pageX - 40}px`;
-        el.style.top = `${e.pageY - 60}px`;
-      });
+      container.appendChild(card);
+    }
 
-      container.appendChild(el);
+    function dealCards() {
+      container.innerHTML = '';
+      const deck = shuffleDeck();
+      deck.slice(0, 28).forEach((card, i) => {
+        const x = 40 + (i % 7) * 100;
+        const y = 40 + Math.floor(i / 7) * 30;
+        createCard(card, x, y);
+      });
+    }
+
+    resetButton.addEventListener('click', () => {
+      dealCards();
     });
+
+    // Initial deal
+    dealCards();
   </script>
 </body>
 </html>
